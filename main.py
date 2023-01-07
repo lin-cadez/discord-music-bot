@@ -1,14 +1,18 @@
 import discord
 from discord.ext import commands,tasks
 import os
+#import suggest_music
+import asyncio
 import time
 import requests
 import csv
+import random
+import threading
+import feedparser
+#import manager
 import youtube_dl
 from youtubesearchpython import *
 from pytube import YouTube
-
-skip_music=[]
 
 
 intents = discord.Intents().all()
@@ -16,10 +20,28 @@ intents = discord.Intents().all()
 client = commands.Bot(command_prefix='!',intents=intents)
 
 
-
 class bot():
     """docstring for bot"""
 
+    async def is_playing(self):
+        try:
+            voice_channel = ctx.message.guild.voice_client
+            voice_client.is_playing()
+        except:
+            pass
+            #ne predvaja
+
+    async def zbris_file(self):
+        dirname = os.path.dirname(__file__)
+        files = os.listdir(dirname)
+        for file in files:
+            name, extension = os.path.splitext(file)
+            if extension == '.mp3':
+                try:
+                    os.remove(os.path.join(dirname, file))
+                except:
+                    print("element is currently in use")
+                
     async def play(self, message):
         user=str(message.author).split("#")[0]
         server = message.guild
@@ -57,8 +79,6 @@ class bot():
                 print("Song: ", title)
                 await message.channel.send("Song: " + title)
                 file_name=self.get_file(url, title)
-                
-                print(file_name, "je to")
                 if file_name:
                     
 
@@ -76,6 +96,7 @@ class bot():
                     voice_channel.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=file_name))
                     print("Playing")
 
+                    return title
                         
                         
                     #except:
@@ -92,6 +113,42 @@ class bot():
             else:
                 print("Napaka pri odpiranju url-ja")
 
+    async def random(self, message):
+        server = message.guild
+        channel = message.author.voice.channel
+        voice_channel = server.voice_client
+        try: 
+            await channel.connect()
+        except:
+            pass
+        try:
+            await voice_channel.stop()
+        except:
+            pass
+
+        input_s=suggest_music.chart()
+
+        
+        if file_name:
+
+            print("to je filename:  ", file_name)
+            channel = message.author.voice.channel
+            voice_channel = server.voice_client
+            voice_client=server.voice_client
+            file_name=os.path.basename(file_name)
+
+            voice_channel.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=file_name))
+            print("Playing")
+
+            return title
+                
+
+        else:
+            print("try another song")
+            await message.channel.send("Song may disrespect guidlines or it is a live stream")
+
+
+       
     async def leave(self, message):
         try:
             server = message.guild
@@ -103,7 +160,6 @@ class bot():
             await message.channel.send("Bot is not joined in any of voice channels. Use command .join to activate the bot.")
             time.sleep(0.3)
             print("Napaka v Leave funkciji")
-
 
     async def join(self, message):
         try:
@@ -127,7 +183,6 @@ class bot():
             #await message.channel.send(f"{user} Neki problem s stopom")
             print("Error in stop function")
         
-
     def is_url(self, url):
         if "https://www.youtube.com/" in url or "https://youtu.be/" in url:
 
@@ -157,7 +212,6 @@ class bot():
             print("rezultatov je več kot 1? baje")
 
             return False, False
-
 
     def get_file(self, url, title):
         file_to_search=title+".mp3"
@@ -189,49 +243,49 @@ class bot():
                 return filename
             except:
                 return False
-
-        
+   
 bot=bot()
-
-
 
 #definiranje komand
 @client.event
 async def on_message(message):
+    start_time = time.time()
+    await bot.zbris_file()
 
     server = message.guild           
     user=str(message.author).split("#")[0]
-    
 
-    start_time = time.time()
+    
 
     if not message.author.bot:
 
+        if ".random" in message.content or ".play random" in message.content:
+            await bot.random(message)
+        else:
 
+            if ".join" in message.content:
+                await bot.join(message)
 
-        if ".join" in message.content:
-            await bot.join(message)
             
-
-        if ".stop" in message.content:
-            await bot.stop(message)
-
-
-        if ".out" in message.content or ".leave" in message.content:
-            await bot.leave(message)
                 
 
-        if ".play " in message.content:
-            await bot.play(message)
-            await client.change_presence(activity=discord.Game(name="with fire."))
+            if ".stop" in message.content:
+                await bot.stop(message)
 
 
-            print("--- %s seconds ---" % (time.time() - start_time))
+            if ".out" in message.content or ".leave" in message.content:
+                await bot.leave(message)
+                    
 
+            if ".play " in message.content:
+                await bot.play(message)
+                await client.change_presence(activity=discord.Game(name="a song"))
 
+        print("--- %s seconds ---" % (time.time() - start_time))
+            
 
 
 
 
 if __name__ == "__main__" :
-    client.run("token")
+    client.run("MTAwMzMzOTYyNjIyNTg3MjkwNw.GqvrDu.nLJUHy-lsgMEhSbv8KwLeYKu20hXSZSJ6x3iDQ")
