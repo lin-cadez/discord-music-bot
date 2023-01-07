@@ -288,4 +288,4 @@ async def on_message(message):
 
 
 if __name__ == "__main__" :
-    client.run("MTAwMzMzOTYyNjIyNTg3MjkwNw.GqvrDu.nLJUHy-lsgMEhSbv8KwLeYKu20hXSZSJ6x3iDQ")
+    client.run("token")
